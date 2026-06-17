@@ -49,3 +49,7 @@ Thumbs.db
 __pycache__/
 *.pyc
 *.pyo
+
+# Agent prompts and memory
+/.prompts/
+/.memory/
