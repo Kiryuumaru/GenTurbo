@@ -3,7 +3,6 @@
 	<PropertyGroup>
 		<BaseCommandType>Presentation.Commands.BaseCommand</BaseCommandType>
 		<OutputType>Exe</OutputType>
-		<EnableNsDepCop>false</EnableNsDepCop>
 	</PropertyGroup>
 
 	<PropertyGroup>

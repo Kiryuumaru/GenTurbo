@@ -11,6 +11,7 @@
 
 	<ItemGroup>
 		<InternalsVisibleTo Include="Infrastructure.Sqlite" />
+		<InternalsVisibleTo Include="Infrastructure.InMemory" />
 		<InternalsVisibleTo Include="Infrastructure.Python" />
 		<InternalsVisibleTo Include="Infrastructure.FileSystem" />
 		<InternalsVisibleTo Include="genturbo-server" />

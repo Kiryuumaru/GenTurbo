@@ -1,13 +1,15 @@
 namespace Domain.Shared.Exceptions;
 
-public class ValidationException : DomainException
+/// <summary>
+/// Exception thrown when validation fails.
+/// </summary>
+public sealed class ValidationException : DomainException
 {
-    public string PropertyName { get; }
+    public string? PropertyName { get; }
 
     public ValidationException(string message)
         : base(message)
     {
-        PropertyName = string.Empty;
     }
 
     public ValidationException(string propertyName, string message)
@@ -19,6 +21,5 @@ public class ValidationException : DomainException
     public ValidationException(string message, Exception innerException)
         : base(message, innerException)
     {
-        PropertyName = string.Empty;
     }
 }

@@ -23,20 +23,20 @@ internal static class ClientEndpoints
                 return Results.Problem($"Unknown model: {request.Model}", statusCode: 400);
             var result = await jobService.SubmitJobAsync(request, ct);
             return Results.Created($"/jobs/{result.RequestId}", result);
-        }).WithTags("client").WithOpenApi(op => { op.Summary = "Submit a generation job"; op.Description = "Submit an image/video/audio/3D generation job. Returns immediately with a request_id."; return op; });
+        }).WithTags("client").WithSummary("Submit a generation job").WithDescription("Submit an image/video/audio/3D generation job. Returns immediately with a request_id.");
 
         client.MapGet("/jobs", async ([FromQuery] string? status, [FromQuery] string? model, [FromQuery] string? type, [FromQuery] int? limit, [FromQuery] int? offset, IJobService jobService, CancellationToken ct) =>
         {
             var jobStatus = status is not null ? Enum.Parse<JobStatus>(status, ignoreCase: true) : (JobStatus?)null;
             var mediaType = type is not null ? Enum.Parse<MediaType>(type, ignoreCase: true) : (MediaType?)null;
             return Results.Ok(await jobService.ListJobsAsync(jobStatus, model, mediaType, limit ?? 20, offset ?? 0, ct));
-        }).WithTags("client").WithOpenApi(op => { op.Summary = "List jobs"; op.Description = "Returns jobs ordered by creation time (newest first)."; return op; });
+        }).WithTags("client").WithSummary("List jobs").WithDescription("Returns jobs ordered by creation time (newest first).");
 
         client.MapGet("/jobs/{jobId:guid}", async (Guid jobId, IJobService jobService, CancellationToken ct) =>
         {
             var job = await jobService.GetJobAsync(jobId, ct);
             return job is null ? Results.Problem("Job not found", statusCode: 404) : Results.Ok(job);
-        }).WithTags("client").WithOpenApi(op => { op.Summary = "Get job status"; op.Description = "Returns full job details."; return op; });
+        }).WithTags("client").WithSummary("Get job status").WithDescription("Returns full job details.");
 
         client.MapPut("/jobs/{jobId:guid}/cancel", async (Guid jobId, IJobService jobService, CancellationToken ct) =>
         {
@@ -44,7 +44,7 @@ internal static class ClientEndpoints
             if (job is null) return Results.Problem("Job not found", statusCode: 404);
             if (!await jobService.CancelJobAsync(jobId, ct)) return Results.Problem($"Cannot cancel job with status {job.Status}", statusCode: 400);
             return Results.Ok(new { request_id = jobId, status = "CANCELLED" });
-        }).WithTags("client").WithOpenApi(op => { op.Summary = "Cancel a job"; op.Description = "Cancel a queued or in-progress job."; return op; });
+        }).WithTags("client").WithSummary("Cancel a job").WithDescription("Cancel a queued or in-progress job.");
 
         client.MapDelete("/jobs/{jobId:guid}", async (Guid jobId, [FromQuery] bool? force, IJobService jobService, CancellationToken ct) =>
         {
@@ -54,30 +54,30 @@ internal static class ClientEndpoints
                 return result is null ? Results.Problem("Job not found", statusCode: 404) : Results.Ok(new { request_id = jobId, status = "DELETED" });
             }
             catch (InvalidOperationException ex) { return Results.Problem(ex.Message, statusCode: 400); }
-        }).WithTags("client").WithOpenApi(op => { op.Summary = "Permanently delete a job"; op.Description = "Deletes the job record and generated file."; return op; });
+        }).WithTags("client").WithSummary("Permanently delete a job").WithDescription("Deletes the job record and generated file.");
 
         client.MapGet("/models", async (IWorkerService workerService, CancellationToken ct) =>
         {
             var models = await workerService.GetAllModelsAsync(ct);
             return Results.Ok(new { models, count = models.Count });
-        }).WithTags("client").WithOpenApi(op => { op.Summary = "List available models"; op.Description = "Returns all models across connected workers."; return op; });
+        }).WithTags("client").WithSummary("List available models").WithDescription("Returns all models across connected workers.");
 
         client.MapGet("/models/{modelId}", async (string modelId, IWorkerService workerService, CancellationToken ct) =>
         {
             var model = await workerService.GetModelAsync(modelId, ct);
             return model is null ? Results.Problem("Model not found", statusCode: 404) : Results.Ok(model);
-        }).WithTags("client").WithOpenApi(op => { op.Summary = "Get model details"; op.Description = "Returns single model's full param_schema."; return op; });
+        }).WithTags("client").WithSummary("Get model details").WithDescription("Returns single model's full param_schema.");
 
         client.MapGet("/files/{filename}", (string filename, IWorkerService _) =>
         {
             var path = Path.Combine("/app/files", Path.GetFileName(filename));
             return File.Exists(path) ? Results.File(path) : Results.Problem("File not found", statusCode: 404);
-        }).WithTags("client").WithOpenApi(op => { op.Summary = "Download a generated file"; op.Description = "Serve a generated output file."; return op; });
+        }).WithTags("client").WithSummary("Download a generated file").WithDescription("Serve a generated output file.");
 
         client.MapGet("/health", async (IWorkerService workerService, CancellationToken ct) =>
         {
             var workers = await workerService.GetAllWorkersAsync(ct);
             return Results.Ok(new { status = "ok", workers = workers.ToDictionary(w => w.WorkerId, w => new { w.Name, w.Status, w.Models }) });
-        }).WithTags("client").WithOpenApi(op => { op.Summary = "Health check"; op.Description = "Returns orchestrator health and connected worker info."; return op; });
+        }).WithTags("client").WithSummary("Health check").WithDescription("Returns orchestrator health and connected worker info.");
     }
 }

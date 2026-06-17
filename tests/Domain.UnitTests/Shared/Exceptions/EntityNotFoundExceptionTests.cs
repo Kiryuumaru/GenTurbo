@@ -12,8 +12,8 @@ public class EntityNotFoundExceptionTests
         var exception = new EntityNotFoundException(message);
 
         Assert.Equal(message, exception.Message);
-        Assert.Equal(string.Empty, exception.EntityType);
-        Assert.Equal(string.Empty, exception.EntityIdentifier);
+        Assert.Null(exception.EntityType);
+        Assert.Null(exception.EntityIdentifier);
     }
 
     [Fact]
@@ -24,7 +24,7 @@ public class EntityNotFoundExceptionTests
 
         var exception = new EntityNotFoundException(entityType, entityId);
 
-        Assert.Equal("User with identifier '12345' was not found.", exception.Message);
+        Assert.Equal("User '12345' was not found.", exception.Message);
         Assert.Equal(entityType, exception.EntityType);
         Assert.Equal(entityId, exception.EntityIdentifier);
     }

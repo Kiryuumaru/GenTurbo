@@ -13,9 +13,9 @@ public static class SharedServiceCollectionExtensions
     }
 
     public static IServiceCollection AddDomainEventHandler<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services)
-        where THandler : class, IDomainEventHandlerMarker
+        where THandler : class, IDomainEventHandler
     {
-        services.AddScoped<IDomainEventHandlerMarker, THandler>();
+        services.AddScoped<IDomainEventHandler, THandler>();
         return services;
     }
 }

@@ -1,12 +1,11 @@
 namespace Domain.Shared.Interfaces;
 
+/// <summary>
+/// Marks entities that serve as aggregate roots and can raise domain events.
+/// </summary>
 public interface IAggregateRoot
 {
-    IReadOnlyList<IDomainEvent> DomainEvents { get; }
-
-    void AddDomainEvent(IDomainEvent domainEvent);
-
-    void RemoveDomainEvent(IDomainEvent domainEvent);
+    IReadOnlyCollection<IDomainEvent> DomainEvents { get; }
 
     void ClearDomainEvents();
 }

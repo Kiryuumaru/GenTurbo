@@ -12,7 +12,7 @@ public class ValidationExceptionTests
         var exception = new ValidationException(message);
 
         Assert.Equal(message, exception.Message);
-        Assert.Equal(string.Empty, exception.PropertyName);
+        Assert.Null(exception.PropertyName);
     }
 
     [Fact]

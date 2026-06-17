@@ -28,7 +28,7 @@ internal static class WorkerEndpoints
             }
             await workerService.RegisterWorkerAsync(workerId, name, host, models, ct);
             return Results.Ok(new { status = "registered", worker_id = workerId });
-        }).WithOpenApi(op => { op.Summary = "Register a worker"; op.Description = "Called by workers at startup. Idempotent."; return op; });
+        }).WithSummary("Register a worker").WithDescription("Called by workers at startup. Idempotent.");
 
         worker.MapPost("/poll", async ([FromBody] JsonElement body, IWorkerService workerService, CancellationToken ct) =>
         {
@@ -36,7 +36,7 @@ internal static class WorkerEndpoints
             var workerId = body.GetProperty("worker_id").GetString()!;
             var job = await workerService.PollForJobAsync(workerId, ct);
             return Results.Ok(new { job });
-        }).WithOpenApi(op => { op.Summary = "Poll for next job"; op.Description = "Returns next pending job or null. Stale jobs auto-recovered."; return op; });
+        }).WithSummary("Poll for next job").WithDescription("Returns next pending job or null. Stale jobs auto-recovered.");
 
         worker.MapPost("/complete", async ([FromForm] string workerId, [FromForm] string jobId, [FromForm] string? error, [FromForm] string? errorType, IFormFile? file, IWorkerService workerService, CancellationToken ct) =>
         {
@@ -50,13 +50,13 @@ internal static class WorkerEndpoints
             await file.CopyToAsync(ms, ct);
             await workerService.CompleteJobAsync(workerId, jobId, file.FileName, ms.ToArray(), ct);
             return Results.Ok(new { status = "accepted" });
-        }).DisableAntiforgery().WithOpenApi(op => { op.Summary = "Report job completion"; op.Description = "Multipart: upload file or report error."; return op; });
+        }).DisableAntiforgery().WithSummary("Report job completion").WithDescription("Multipart: upload file or report error.");
 
         worker.MapPost("/heartbeat", async ([FromBody] JsonElement body, IWorkerService workerService, CancellationToken ct) =>
         {
             var workerId = body.GetProperty("worker_id").GetString()!;
             var ok = await workerService.HeartbeatAsync(workerId, ct);
             return Results.Ok(new { status = ok ? "ok" : "unknown_worker" });
-        }).WithOpenApi(op => { op.Summary = "Worker keepalive"; op.Description = "Called every ~30s."; return op; });
+        }).WithSummary("Worker keepalive").WithDescription("Called every ~30s.");
     }
 }

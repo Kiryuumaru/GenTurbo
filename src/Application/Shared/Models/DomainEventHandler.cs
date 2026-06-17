@@ -3,16 +3,18 @@ using Domain.Shared.Interfaces;
 
 namespace Application.Shared.Models;
 
-public abstract class DomainEventHandler<TEvent> : IDomainEventHandler<TEvent>, IDomainEventHandlerMarker
-    where TEvent : IDomainEvent
+public abstract class DomainEventHandler<TEvent> : IDomainEventHandler<TEvent> where TEvent : IDomainEvent
 {
-    public Task HandleAsync(IDomainEvent domainEvent, CancellationToken cancellationToken = default)
+    public bool CanHandle(IDomainEvent domainEvent) => domainEvent is TEvent;
+
+    public ValueTask HandleAsync(IDomainEvent domainEvent, CancellationToken cancellationToken = default)
     {
         if (domainEvent is TEvent typedEvent)
+        {
             return HandleAsync(typedEvent, cancellationToken);
-
-        return Task.CompletedTask;
+        }
+        return ValueTask.CompletedTask;
     }
 
-    public abstract Task HandleAsync(TEvent domainEvent, CancellationToken cancellationToken = default);
+    public abstract ValueTask HandleAsync(TEvent domainEvent, CancellationToken cancellationToken = default);
 }

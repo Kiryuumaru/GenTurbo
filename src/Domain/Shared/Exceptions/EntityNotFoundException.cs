@@ -1,20 +1,20 @@
 namespace Domain.Shared.Exceptions;
 
+/// <summary>
+/// Exception thrown when an entity is not found.
+/// </summary>
 public class EntityNotFoundException : DomainException
 {
-    public string EntityType { get; }
-
-    public string EntityIdentifier { get; }
+    public string? EntityType { get; }
+    public string? EntityIdentifier { get; }
 
     public EntityNotFoundException(string message)
         : base(message)
     {
-        EntityType = string.Empty;
-        EntityIdentifier = string.Empty;
     }
 
     public EntityNotFoundException(string entityType, string entityIdentifier)
-        : base($"{entityType} with identifier '{entityIdentifier}' was not found.")
+        : base($"{entityType} '{entityIdentifier}' was not found.")
     {
         EntityType = entityType;
         EntityIdentifier = entityIdentifier;
@@ -23,7 +23,5 @@ public class EntityNotFoundException : DomainException
     public EntityNotFoundException(string message, Exception innerException)
         : base(message, innerException)
     {
-        EntityType = string.Empty;
-        EntityIdentifier = string.Empty;
     }
 }

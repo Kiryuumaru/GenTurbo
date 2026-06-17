@@ -2,12 +2,14 @@
 
 	<PropertyGroup>
 		<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
-		<EnableNsDepCop>false</EnableNsDepCop>
+		<BaseCommandType>Presentation.Commands.BaseCommand</BaseCommandType>
 	</PropertyGroup>
 
 	<PropertyGroup>
+		<AssemblyTitle>GenTurbo Server</AssemblyTitle>
 		<AssemblyName>genturbo-server</AssemblyName>
 		<RootNamespace>Presentation.Server</RootNamespace>
+		<Description>GenTurbo orchestrator — REST API, job queue, worker registry, file serving.</Description>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -15,6 +17,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\Presentation\Presentation.csproj" />
 		<ProjectReference Include="..\Application\Application.csproj" />
 		<ProjectReference Include="..\Domain\Domain.csproj" />
 		<ProjectReference Include="..\Infrastructure.Sqlite\Infrastructure.Sqlite.csproj" />
