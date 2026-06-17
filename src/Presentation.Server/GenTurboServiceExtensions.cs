@@ -13,7 +13,7 @@ internal static class GenTurboServiceExtensions
         Application.Jobs.Extensions.JobsServiceCollectionExtensions.AddJobsServices(services);
         Application.Workers.Extensions.WorkersServiceCollectionExtensions.AddWorkersServices(services);
         Infrastructure.Sqlite.Extensions.SqliteServiceCollectionExtensions.AddSqliteServices(services);
-        Infrastructure.Python.Extensions.PythonServiceCollectionExtensions.AddPythonServices(services);
+        Infrastructure.Python.ZImage.Extensions.ZImageServiceCollectionExtensions.AddZImageServices(services);
         Infrastructure.FileSystem.Extensions.FileSystemServiceCollectionExtensions.AddFileSystemServices(services);
         return services;
     }

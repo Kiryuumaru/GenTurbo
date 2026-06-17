@@ -17,6 +17,7 @@
 		<ProjectReference Include="..\Application\Application.csproj" />
 		<ProjectReference Include="..\Infrastructure.Sqlite\Infrastructure.Sqlite.csproj" />
 		<ProjectReference Include="..\Infrastructure.Python\Infrastructure.Python.csproj" />
+		<ProjectReference Include="..\Infrastructure.Python.ZImage\Infrastructure.Python.ZImage.csproj" />
 		<ProjectReference Include="..\Infrastructure.FileSystem\Infrastructure.FileSystem.csproj" />
 		<ProjectReference Include="..\Presentation\Presentation.csproj" />
 	</ItemGroup>

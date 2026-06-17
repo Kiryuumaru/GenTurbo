@@ -1,30 +1,27 @@
 using Application.Jobs.Interfaces.Outbound;
 using CSnakes.Runtime;
 using CSnakes.Runtime.Python;
+using Infrastructure.Python.Adapters;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
-namespace Infrastructure.Python.Adapters;
+namespace Infrastructure.Python.ZImage.Adapters;
 
-internal sealed class CSnakesInferenceAdapter : IPythonInferenceProvider, IDisposable
+internal sealed class ZImageInferenceAdapter : IPythonInferenceProvider, IDisposable
 {
-    private readonly PyObject _module;
-    private readonly ILogger<CSnakesInferenceAdapter> _logger;
+    private readonly PythonModuleRunner _runner;
+    private readonly ILogger<ZImageInferenceAdapter> _logger;
 
-    public CSnakesInferenceAdapter(IPythonEnvironment pythonEnv, ILogger<CSnakesInferenceAdapter> logger)
+    public ZImageInferenceAdapter(IPythonEnvironment pythonEnv, ILogger<ZImageInferenceAdapter> logger)
     {
         _logger = logger;
-
-        using (GIL.Acquire())
-        {
-            _logger.LogInformation("Importing Python bridge module: bridge");
-            _module = Import.ImportModule("bridge");
-        }
+        _logger.LogInformation("Loading Z-Image-Turbo inference engine");
+        _runner = new PythonModuleRunner(pythonEnv, "bridge");
     }
 
     public void Dispose()
     {
-        _module.Dispose();
+        _runner.Dispose();
     }
 
     public async Task<PythonInferenceResult> RunInferenceAsync(
@@ -54,10 +51,10 @@ internal sealed class CSnakesInferenceAdapter : IPythonInferenceProvider, IDispo
 
             using var result = CallGenerateImage(prompt, steps, guidance, width, height, seed, lorasJson);
 
-            var filepath = GetDictString(result, "filepath");
-            var actualSeed = GetDictLong(result, "seed", seed);
-            var actualWidth = GetDictLong(result, "width", width);
-            var actualHeight = GetDictLong(result, "height", height);
+            var filepath = PythonModuleRunner.GetDictString(result, "filepath");
+            var actualSeed = PythonModuleRunner.GetDictLong(result, "seed", seed);
+            var actualWidth = PythonModuleRunner.GetDictLong(result, "width", width);
+            var actualHeight = PythonModuleRunner.GetDictLong(result, "height", height);
 
             var metadata = new Dictionary<string, object?>
             {
@@ -87,7 +84,7 @@ internal sealed class CSnakesInferenceAdapter : IPythonInferenceProvider, IDispo
     {
         using (GIL.Acquire())
         {
-            using var func = _module.GetAttr("generate_image");
+            using var func = _runner.GetFunction("generate_image");
             using var pPrompt = PyObject.From(prompt);
             using var pSteps = PyObject.From(steps);
             using var pGuidance = PyObject.From(guidance);
@@ -97,24 +94,6 @@ internal sealed class CSnakesInferenceAdapter : IPythonInferenceProvider, IDispo
             using var pLorasJson = PyObject.From(lorasJson);
 
             return func.Call(pPrompt, pSteps, pGuidance, pWidth, pHeight, pSeed, pLorasJson);
-        }
-    }
-
-    private static string GetDictString(PyObject dict, string key)
-    {
-        using (GIL.Acquire())
-        {
-            var d = dict.As<IReadOnlyDictionary<string, PyObject>>();
-            return d.TryGetValue(key, out var v) ? v?.ToString() ?? string.Empty : string.Empty;
-        }
-    }
-
-    private static long GetDictLong(PyObject dict, string key, long defaultValue)
-    {
-        using (GIL.Acquire())
-        {
-            var d = dict.As<IReadOnlyDictionary<string, PyObject>>();
-            return d.TryGetValue(key, out var v) && v is not null ? v.As<long>() : defaultValue;
         }
     }
 
@@ -129,9 +108,7 @@ internal sealed class CSnakesInferenceAdapter : IPythonInferenceProvider, IDispo
             return defaultValue;
         return value switch
         {
-            int i => i,
-            long l => l,
-            double d => (long)d,
+            int i => i, long l => l, double d => (long)d,
             string s when long.TryParse(s, out var parsed) => parsed,
             _ => defaultValue
         };
@@ -143,9 +120,7 @@ internal sealed class CSnakesInferenceAdapter : IPythonInferenceProvider, IDispo
             return defaultValue;
         return value switch
         {
-            double d => d,
-            float f => f,
-            int i => i,
+            double d => d, float f => f, int i => i,
             string s when double.TryParse(s, out var parsed) => parsed,
             _ => defaultValue
         };

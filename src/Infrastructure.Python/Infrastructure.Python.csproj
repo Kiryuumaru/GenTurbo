@@ -10,22 +10,18 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="PythonModules\**\*.py">
+		<None Include="PythonModules\models\shared\**\*.py">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<LinkBase>PythonModules\</LinkBase>
-		</None>
-		<None Include="PythonModules\**\requirements.txt">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<LinkBase>PythonModules\</LinkBase>
+			<LinkBase>PythonModules\models\shared\</LinkBase>
 		</None>
 	</ItemGroup>
 
 	<ItemGroup>
 		<InternalsVisibleTo Include="genturbo-server" />
+		<InternalsVisibleTo Include="Infrastructure.Python.ZImage" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Application\Application.csproj" />
 		<ProjectReference Include="..\Domain\Domain.csproj" />
 	</ItemGroup>
 

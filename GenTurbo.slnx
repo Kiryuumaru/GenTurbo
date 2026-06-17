@@ -1,9 +1,12 @@
 <Solution>
   <Project Path="src/Domain/Domain.csproj" />
   <Project Path="src/Domain.SourceGenerators/Domain.SourceGenerators.csproj" />
+  <Folder Name="/src/">
+    <Project Path="src/Infrastructure.Python.ZImage/Infrastructure.Python.ZImage.csproj" />
+    <Project Path="src/Infrastructure.Python/Infrastructure.Python.csproj" />
+  </Folder>
   <Project Path="src/Application/Application.csproj" />
   <Project Path="src/Infrastructure.Sqlite/Infrastructure.Sqlite.csproj" />
-  <Project Path="src/Infrastructure.Python/Infrastructure.Python.csproj" />
   <Project Path="src/Infrastructure.FileSystem/Infrastructure.FileSystem.csproj" />
   <Project Path="src/Presentation/Presentation.csproj" />
   <Project Path="src/Presentation.Worker/Presentation.Worker.csproj" />
