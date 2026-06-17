@@ -4,9 +4,9 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(GenerateBuildConstants)' == 'true'">
-		<AssemblyName Condition="'$(AssemblyName)' == ''">genturbo</AssemblyName>
-		<AssemblyTitle Condition="'$(AssemblyTitle)' == ''">GenTurbo</AssemblyTitle>
-		<Description Condition="'$(Description)' == ''">Distributed multi-model media generation platform</Description>
+		<AssemblyName Condition="'$(AssemblyName)' == ''">sampleapp</AssemblyName>
+		<AssemblyTitle Condition="'$(AssemblyTitle)' == ''">Sample Application</AssemblyTitle>
+		<Description Condition="'$(Description)' == ''">Sample Application</Description>
 		<FullVersion Condition="'$(FullVersion)' == ''">0.0.0-prerelease.0+build.local</FullVersion>
 		<InformationalVersion Condition="'$(InformationalVersion)' == ''">$(FullVersion)</InformationalVersion>
 		<AppTag Condition="'$(AppTag)' == ''">prerelease</AppTag>
@@ -28,7 +28,8 @@
 		<CompilerVisibleProperty Include="EmbeddedConfigFileName" />
 	</ItemGroup>
 
-	<PropertyGroup Condition="$(MSBuildProjectDirectory.Contains('src')) AND !$(MSBuildProjectDirectory.Contains('SourceGenerators')) AND !$(MSBuildProjectDirectory.Contains('Presentation'))">
+	<!-- NsDepCop Configuration - exclude SourceGenerators and tests -->
+	<PropertyGroup Condition="$(MSBuildProjectDirectory.Contains('src')) AND !$(MSBuildProjectDirectory.Contains('SourceGenerators'))">
 		<EnableNsDepCop>true</EnableNsDepCop>
 		<WarningsAsErrors>$(WarningsAsErrors);NSDEPCOP01</WarningsAsErrors>
 	</PropertyGroup>
@@ -41,20 +42,20 @@
 		<NsDepCopConfigContent>
 <![CDATA[<?xml version="1.0" encoding="utf-8"?>
 <NsDepCopConfig IsEnabled="true" ChildCanDependOnParentImplicitly="true" MaxIssueCount="100">
+	<!-- Architecture layer violations -->
 	<Disallowed From="Domain.*" To="Application.*" />
 	<Disallowed From="Domain.*" To="Infrastructure.*" />
 	<Disallowed From="Domain.*" To="Presentation.*" />
 	<Disallowed From="Application.*" To="Infrastructure.*" />
 	<Disallowed From="Application.*" To="Presentation.*" />
 	<Disallowed From="Infrastructure.*" To="Presentation.*" />
+
+	<!-- Presentation cannot access Outbound or internal interfaces -->
 	<Disallowed From="Presentation.*" To="*.Interfaces.Outbound.*" />
 	<Disallowed From="Presentation.*" To="Application.Shared.Interfaces" />
 	<Disallowed From="Presentation.*" To="Application.*.Interfaces" />
 
-	<Allowed From="Presentation.Api.*" To="Application.*.Interfaces.*" />
-	<Allowed From="Presentation.Api.*" To="Infrastructure.*" />
-	<Allowed From="Presentation.Api.Endpoints" To="Application.*.Interfaces.Outbound" />
-	<Allowed From="Presentation.Api.Endpoints" To="Application.*.Interfaces" />
+	<!-- Allow everything else (third-party libs, framework, etc.) -->
 	<Allowed From="*" To="*" />
 </NsDepCopConfig>]]>
 		</NsDepCopConfigContent>
