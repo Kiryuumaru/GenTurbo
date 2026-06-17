@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace Infrastructure.Python.ZImage.Adapters;
 
-internal sealed class ZImageInferenceAdapter : IPythonInferenceProvider, IDisposable
+internal sealed class ZImageInferenceAdapter : IInferenceProvider, IDisposable
 {
     private readonly PythonModuleRunner _runner;
     private readonly ILogger<ZImageInferenceAdapter> _logger;
@@ -24,7 +24,7 @@ internal sealed class ZImageInferenceAdapter : IPythonInferenceProvider, IDispos
         _runner.Dispose();
     }
 
-    public async Task<PythonInferenceResult> RunInferenceAsync(
+    public async Task<InferenceResult> RunInferenceAsync(
         string model,
         IReadOnlyDictionary<string, object?> parameters,
         CancellationToken cancellationToken = default)
@@ -65,7 +65,7 @@ internal sealed class ZImageInferenceAdapter : IPythonInferenceProvider, IDispos
             };
 
             _logger.LogInformation("Inference completed: {Path} ({Width}x{Height})", filepath, actualWidth, actualHeight);
-            return new PythonInferenceResult(filepath, metadata.AsReadOnly(), true);
+            return new InferenceResult(filepath, metadata.AsReadOnly(), true);
         }
         catch (OperationCanceledException)
         {
@@ -74,7 +74,7 @@ internal sealed class ZImageInferenceAdapter : IPythonInferenceProvider, IDispos
         catch (Exception ex)
         {
             _logger.LogError(ex, "Python inference failed for model {Model}", model);
-            return new PythonInferenceResult(
+            return new InferenceResult(
                 string.Empty, new Dictionary<string, object?>(), false, ex.Message, ex.GetType().Name);
         }
     }

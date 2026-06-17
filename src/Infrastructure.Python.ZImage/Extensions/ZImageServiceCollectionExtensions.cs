@@ -19,7 +19,7 @@ internal static class ZImageServiceCollectionExtensions
             sharedPath = Path.Combine(baseDir, "PythonModules", "models", "shared");
 
         services.AddPythonModule(modelPath, sharedPath);
-        services.AddSingleton<IPythonInferenceProvider, ZImageInferenceAdapter>();
+        services.AddSingleton<IInferenceProvider, ZImageInferenceAdapter>();
 
         return services;
     }

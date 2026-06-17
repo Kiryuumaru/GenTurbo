@@ -45,7 +45,7 @@ internal class WorkerCommand : Build.BaseCommand<HostApplicationBuilder>
 
         using var scope = applicationHost.Services.CreateScope();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<WorkerCommand>>();
-        var inferenceProvider = scope.ServiceProvider.GetRequiredService<IPythonInferenceProvider>();
+        var inferenceProvider = scope.ServiceProvider.GetRequiredService<IInferenceProvider>();
 
         logger.LogInformation("Worker {WorkerId} ({Name}) → {Url}", WorkerId, WorkerName, OrchestratorUrl);
 
@@ -85,7 +85,7 @@ internal class WorkerCommand : Build.BaseCommand<HostApplicationBuilder>
 
                 if (result.Success)
                 {
-                    await UploadResultAsync(http, job.JobId, result.FilePath, logger, ct);
+                    await UploadResultAsync(http, job.JobId, result.OutputFilePath, logger, ct);
                     logger.LogInformation("Job {JobId} done in {Time:F1}s", job.JobId, sw.Elapsed.TotalSeconds);
                 }
                 else
