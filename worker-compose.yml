@@ -1,0 +1,34 @@
+# gen-turbo worker — deploys to vulcan (DGX, aarch64) or canopus (RTX, x86_64)
+# Uses NGC pytorch:25.10-py3 for GPU access
+# Set WORKER_ID and WORKER_NAME via environment or .env
+services:
+  gen-turbo-worker:
+    image: nvcr.io/nvidia/pytorch:25.10-py3
+    container_name: gen-turbo-worker
+    restart: unless-stopped
+    network_mode: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    volumes:
+      - ./app:/app/app:ro
+      - ./worker-entrypoint.sh:/app/entrypoint.sh:ro
+      - ./data/models:/root/.cache/huggingface
+      - ./data/loras:/app/data/loras:rw
+      - ./output:/app/output
+      - ./cert.pem:/etc/ssl/certs/gen-turbo-ca.pem:ro
+    environment:
+      - HF_HOME=/root/.cache/huggingface
+      - HF_TOKEN=your_hf_token_here
+      - PYTHONPATH=/app
+      - WORKER_ID=${WORKER_ID:-dev-worker}
+      - WORKER_NAME=${WORKER_NAME:-dev}
+      - ORCHESTRATOR_URL=${ORCHESTRATOR_URL:-https://gen-turbo.local.net}
+      - CIVITAI_API_KEY=${CIVITAI_API_KEY:-your_civitai_key}
+    env_file:
+      - .env
+    entrypoint: ["/app/entrypoint.sh"]

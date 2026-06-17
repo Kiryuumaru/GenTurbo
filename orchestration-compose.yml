@@ -1,0 +1,92 @@
+x-env:
+  ts_authkey: &ts_authkey "YOUR_TS_AUTHKEY"
+services:
+  tailscale:
+    image: tailscale/tailscale:latest
+    hostname: gen-turbo
+    container_name: gen-turbo-tailscale
+    restart: always
+    environment:
+      TS_AUTH_ONCE: true
+      TS_AUTHKEY: *ts_authkey
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: false
+      TS_EXTRA_ARGS: "--accept-dns=true"
+    volumes:
+      - ./data/tailscale-state:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    labels:
+      rtt.enable: "true"
+    cap_add:
+      - net_admin
+      - sys_module
+  nginx:
+    image: nginx:alpine
+    container_name: gen-turbo-nginx
+    restart: always
+    network_mode: "service:tailscale"
+    labels:
+      rtt.enable: "true"
+      rtt.watch.restarts: "gen-turbo-tailscale"
+    depends_on:
+      - tailscale
+    volumes:
+      - ./cert.pem:/etc/nginx/cert.pem:ro
+      - ./cert.key:/etc/nginx/cert.key:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        cat > /etc/nginx/nginx.conf << 'EOF'
+        worker_processes 1;
+        events { worker_connections 1024; }
+        http {
+          include /etc/nginx/mime.types;
+          default_type application/octet-stream;
+          server {
+            listen 80;
+            return 301 https://$$host$$request_uri;
+          }
+          server {
+            listen 443 ssl;
+            ssl_certificate /etc/nginx/cert.pem;
+            ssl_certificate_key /etc/nginx/cert.key;
+            location / {
+              proxy_pass http://127.0.0.1:7860;
+              proxy_set_header Host $$host;
+              proxy_set_header X-Real-IP $$remote_addr;
+              proxy_set_header X-Forwarded-For $$proxy_add_x_forwarded_for;
+              proxy_set_header X-Forwarded-Proto $$scheme;
+              proxy_http_version 1.1;
+              proxy_read_timeout 86400;
+              proxy_send_timeout 86400;
+              proxy_connect_timeout 86400;
+              proxy_buffering off;
+              client_max_body_size 100M;
+            }
+          }
+        }
+        EOF
+        nginx -g "daemon off;"
+  app:
+    image: python:3.12-slim
+    container_name: gen-turbo-orchestrator
+    restart: unless-stopped
+    network_mode: "service:tailscale"
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:7860/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    labels:
+      rtt.enable: "true"
+      rtt.watch.restarts: "gen-turbo-tailscale"
+    volumes:
+      - ./app:/app/app:ro
+      - ./entrypoint.sh:/app/entrypoint.sh:ro
+      - ./data:/app/data
+      - ./files:/app/files
+    environment:
+      - PYTHONPATH=/app
+    entrypoint: ["/app/entrypoint.sh"]
