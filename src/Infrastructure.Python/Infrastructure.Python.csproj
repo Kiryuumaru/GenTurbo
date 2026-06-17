@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<ItemGroup>
+		<PackageReference Include="CSnakes.Runtime" Version="1.2.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AdditionalFiles Include="PythonModules\csnakes_bridge.py">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</AdditionalFiles>
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="Presentation.Api" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Application\Application.csproj" />
+		<ProjectReference Include="..\Domain\Domain.csproj" />
+	</ItemGroup>
+
+</Project>

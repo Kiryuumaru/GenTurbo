@@ -1,8 +1,51 @@
-__pycache__/
-*.pyc
-*.pyo
-.env
+# .NET
+## Build artifacts
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.userprefs
+*.lock.json
+*.DotSettings.user
+*.sln.ide/
+
+## NuGet
+**/[Pp]ackages/*
+!**/[Pp]ackages/repositories.config
+*.nupkg
+*.snupkg
+
+## Coverage & analysis
+TestResults/
+*.coverage
+*.coveragexml
+lcov.info
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.swp
+*~
+
+# JetBrains Rider
+*.sln.iml
+
+# GenTurbo runtime
 data/
 files/
 output/
+.env
 *.db
+*.db-shm
+*.db-wal
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python (inference modules only)
+__pycache__/
+*.pyc
+*.pyo

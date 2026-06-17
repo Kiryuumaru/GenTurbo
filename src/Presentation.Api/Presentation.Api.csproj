@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
+		<EnableNsDepCop>false</EnableNsDepCop>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Application\Application.csproj" />
+		<ProjectReference Include="..\Domain\Domain.csproj" />
+		<ProjectReference Include="..\Infrastructure.Sqlite\Infrastructure.Sqlite.csproj" />
+		<ProjectReference Include="..\Infrastructure.Python\Infrastructure.Python.csproj" />
+		<ProjectReference Include="..\Infrastructure.FileSystem\Infrastructure.FileSystem.csproj" />
+	</ItemGroup>
+
+</Project>
