@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<BaseCommandType>Presentation.Commands.BaseCommand</BaseCommandType>
+		<OutputType>Exe</OutputType>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<AssemblyTitle>GenTurbo Worker</AssemblyTitle>
+		<AssemblyName>genturbo-worker</AssemblyName>
+		<RootNamespace>Presentation.Worker</RootNamespace>
+		<Description>GenTurbo GPU worker node — polls orchestrator, runs inference, uploads results.</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Application\Application.csproj" />
+		<ProjectReference Include="..\Infrastructure.Python\Infrastructure.Python.csproj" />
+		<ProjectReference Include="..\Infrastructure.Python.ZImage\Infrastructure.Python.ZImage.csproj" />
+		<ProjectReference Include="..\Infrastructure.FileSystem\Infrastructure.FileSystem.csproj" />
+		<ProjectReference Include="..\Presentation\Presentation.csproj" />
+	</ItemGroup>
+
+</Project>

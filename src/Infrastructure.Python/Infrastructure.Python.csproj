@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<IsTrimmable>false</IsTrimmable>
+		<EnableTrimAnalyzer>false</EnableTrimAnalyzer>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="CSnakes.Runtime" Version="1.2.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="PythonModules\models\shared\**\*.py">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<LinkBase>PythonModules\models\shared\</LinkBase>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="genturbo-server" />
+		<InternalsVisibleTo Include="Infrastructure.Python.ZImage" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Domain\Domain.csproj" />
+	</ItemGroup>
+
+</Project>

@@ -1,50 +1,50 @@
 # gen-turbo
 
-Distributed multi-model media generation platform — orchestrator job queue with GPU workers across the tailnet.
+Distributed multi-model media generation platform — orchestrator job queue with GPU workers.
 
-## Servers
+## Projects
 
-| Component | Server | Role |
-|-----------|--------|------|
-| **Orchestrator** | orion | Job queue, worker registry, REST API, file serving |
-| **Worker** | vulcan (DGX) | GPU inference — Z-Image-Turbo on GB10 (128GB shared) |
-| **Worker** | canopus (RTX) | GPU inference — Z-Image-Turbo on RTX 4060 Ti (offline pending driver update) |
-
-- **URL**: `https://gen-turbo.local.net`
-- **Image (orchestrator)**: `python:3.12-slim` + custom entrypoint
-- **Image (worker)**: `nvcr.io/nvidia/pytorch:25.10-py3` (NGC, CUDA 13.0 + PyTorch 2.9.0)
-- **Stack**: gen-turbo-tailscale, gen-turbo-nginx, gen-turbo-orchestrator (orion) + gen-turbo-worker (vulcan/canopus)
+| Project | Role |
+|---------|------|
+| `src/Presentation.Server` | **Orchestrator** — REST API, job queue, worker registry, file serving (port 7860) |
+| `src/Presentation.Worker` | **Worker** — GPU inference node, polls orchestrator, uploads results |
+| `src/Domain` | Domain entities, value objects, repository/UoW interfaces |
+| `src/Application` | Service layer, inbound/outbound ports, background workers |
+| `src/Infrastructure.Sqlite` | SQLite persistence (jobs, workers, models) |
+| `src/Infrastructure.Python` | CSnakes + Python inference bridge (subprocess) |
+| `src/Infrastructure.FileSystem` | File output storage |
+| `src/Presentation` | Shared CLI base command |
 
 ## Architecture
 
 ```
-Client → https://gen-turbo.local.net (orion)
-           ├── Tailscale sidecar
-           ├── Nginx (TLS termination, wildcard certs)
-           └── FastAPI orchestrator (port 7860)
-                  ├── SQLite (jobs, workers, models)
-                  └── /app/files/ (generated output)
+Client → Orchestrator (ASP.NET Minimal API, port 7860)
+           ├── SQLite (jobs, workers, models)
+           ├── /app/files/ (generated output)
+           └── Scalar API docs at /
 
-Worker loop (vulcan/canopus):
-  register() → while: heartbeat(30s) → poll() → load() → generate() → upload complete()
+Worker loop:
+  register() → while: heartbeat(30s) → poll() → generate() → upload result
 ```
 
-Workers poll the orchestrator, run inference on their GPU, and upload results via multipart. The orchestrator is stateless beyond SQLite — restart safely.
+The orchestrator (C#) manages the job queue. Workers (C# CLI) poll for jobs,
+call into Python for GPU inference via CSnakes, and upload results.
 
 ## Models
 
-| Model | Worker | VRAM | Type |
-|-------|--------|------|------|
-| `z-image-turbo` (Tongyi-MAI/Z-Image-Turbo, 6B) | vulcan (DGX) | 14 GB | image |
+| Model | VRAM | Type |
+|-------|------|------|
+| `z-image-turbo` (Tongyi-MAI/Z-Image-Turbo, 6B) | 14 GB | image |
 
-Add new adapters in `app/worker/adapters/` — they auto-register via `param_schema`.
+Add a new model by copying `src/Infrastructure.Python/PythonModules/models/z-image-turbo/` to a new directory.
 
 ## API
 
-Documentation at `https://gen-turbo.local.net` (Scalar UI). Key endpoints:
+Documentation at `/` (Scalar UI) and `/openapi.json`. Key endpoints:
 
 | Method | Path | Description |
 |--------|------|-------------|
+| `GET`  | `/` | Scalar API reference |
 | `POST` | `/generate` | Submit a generation job |
 | `GET`  | `/jobs` | List jobs (filterable by status/model/type) |
 | `GET`  | `/jobs/{id}` | Job status + output URL when complete |
@@ -55,49 +55,101 @@ Documentation at `https://gen-turbo.local.net` (Scalar UI). Key endpoints:
 | `GET`  | `/models/{id}` | Model details + full param_schema |
 | `GET`  | `/files/{filename}` | Download generated file |
 | `GET`  | `/health` | Orchestrator health + worker status |
+| `POST` | `/worker/register` | Register a worker (internal) |
+| `POST` | `/worker/poll` | Poll for next job (internal) |
+| `POST` | `/worker/complete` | Report job completion (internal, multipart) |
+| `POST` | `/worker/heartbeat` | Worker keepalive (internal) |
 
-### Status lifecycle
+## Run
 
+### Orchestrator
+
+```bash
+dotnet run --project src/Presentation.Server
 ```
-IN_QUEUE → ASSIGNED → IN_PROGRESS → COMPLETED
-    │                                    │
-    └────────── CANCELLED ←──────────────┘ (PUT /cancel)
+
+Listens on `http://0.0.0.0:7860`.
+
+### Worker
+
+```bash
+dotnet run --project src/Presentation.Worker \
+  --orchestrator-url http://orchestrator-host:7860 \
+  --worker-id gpu-01 \
+  --worker-name "DGX GPU Node" \
+  --model z-image-turbo \
+  --vram-per-model 14
+```
+
+The worker:
+1. Registers with the orchestrator (idempotent)
+2. Polls every 5s for jobs
+3. Runs inference via CSnakes → Python (models/<id>/bridge.py)
+4. Uploads result files via multipart
+5. Heartbeats every 30s
+
+## Build
+
+```bash
+dotnet build
 ```
 
 ## Configuration
 
-### Orchestrator (orion)
+### Orchestrator
 
 | Env Var | Default | Description |
 |---------|---------|-------------|
 | `GEN_TURBO_RETENTION_HOURS` | `24` | Auto-delete expired jobs+files after N hours |
 
-### Worker (vulcan/canopus)
+### Worker
 
-| Env Var | Default | Description |
-|---------|---------|-------------|
-| `WORKER_ID` | `dev-worker` | Unique worker identifier |
-| `WORKER_NAME` | `dev` | Human-readable display name |
-| `ORCHESTRATOR_URL` | `https://gen-turbo.local.net` | Orchestrator URL |
-| `HF_TOKEN` | — | HuggingFace API token for model downloads |
+| Argument | Env Var | Default | Description |
+|----------|---------|---------|-------------|
+| `--orchestrator-url` | `GEN_TURBO_ORCHESTRATOR_URL` | `http://localhost:7860` | Orchestrator URL |
+| `--worker-id` | `WORKER_ID` | `dev-worker` | Unique worker identifier |
+| `--worker-name` | `WORKER_NAME` | `dev` | Human-readable name |
+| `--model` | `WORKER_MODELS` | `z-image-turbo` | Comma-separated model IDs |
+| `--vram-per-model` | `WORKER_VRAM_PER_MODEL` | `14` | VRAM required per model (GB) |
+| `-l` / `--log-level` | `LOG_LEVEL` | `Information` | Log verbosity |
 
-Worker also needs `.env` file at `/app/cl/gen-turbo/.env` with `WORKER_ID` and `WORKER_NAME`.
+## Inference Engine (Python)
+
+GPU inference in `src/Infrastructure.Python/PythonModules/models/`. Each model has its own
+virtualenv with `requirements.txt`. C# calls into it via CSnakes C-API.
+
+```
+PythonModules/models/
+├── shared/
+│   ├── base.py          # MediaAdapter base class + auto-registry
+│   └── lora.py          # LoRA resolution (HF, CivitAI, URL, local cache)
+└── z-image-turbo/
+    ├── requirements.txt # pip dependencies (torch, diffusers, etc.)
+    ├── bridge.py        # CSnakes bridge — entry point for C#
+    └── model.py         # Z-Image-Turbo GPU inference pipeline
+```
+
+### Adding a new model
+
+```bash
+cp -r PythonModules/models/z-image-turbo PythonModules/models/<new-model>
+# edit model.py (new model_id, pipeline), bridge.py, requirements.txt
+```
+
+### Status lifecycle
+
+```
+InQueue → Assigned → InProgress → Completed
+    │                                   │
+    └────────── Cancelled ←─────────────┘
+```
 
 ## Data
 
-- `./data/` — SQLite database (`gen-turbo.db`), Tailscale state
-- `./files/` — Generated output files (served via `/files/{filename}`)
-- `./cert.pem` + `./cert.key` — TLS certs (from `Personal/certs/`)
-- Worker: `./data/models/` — HuggingFace model cache, `./output/` — temp generation output
-
-## Deploy
-
-### Orchestrator (orion)
-```bash
-cd /app/cl/gen-turbo
-docker compose -f orchestration-compose.yml down
-docker compose -f orchestration-compose.yml up -d
-```
+- `data/` — SQLite database (`genturbo.db`)
+- `files/` — Generated output files (served via `/files/{filename}`)
+- `data/loras/` — LoRA weight cache (HF, CivitAI, raw URL)
+- Worker: `./output/` — temp generation output
 
 ### Worker (vulcan)
 ```bash
