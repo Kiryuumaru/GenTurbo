@@ -1,15 +1,19 @@
 """Z-Image-Turbo adapter — proven on GB10 (aarch64)."""
-import os
+import sys
 from pathlib import Path
+
+_SHARED = Path(__file__).resolve().parent.parent / "shared"
+if str(_SHARED) not in sys.path:
+    sys.path.insert(0, str(_SHARED))
+
+import os
 import uuid
 
 import torch
 from diffusers import ZImagePipeline
 
-from ..base import MediaAdapter
-from ...lora import (
-    resolve_lora_source, LORAS_DIR, CIVITAI_CACHE, MAX_LORAS,
-)
+from base import MediaAdapter
+from lora import resolve_lora_source, LORAS_DIR, CIVITAI_CACHE, MAX_LORAS
 
 
 class ZImageAdapter(MediaAdapter):
@@ -28,103 +32,76 @@ class ZImageAdapter(MediaAdapter):
         "height": {"type": "integer", "default": 1024, "min": 64, "max": 2048, "description": "Output image height in pixels"},
         "seed": {"type": "integer", "default": -1, "description": "Random seed for reproducibility (-1 for random)"},
         "loras": {
-            "type": "array",
-            "required": False,
-            "default": [],
-            "maxItems": 3,
+            "type": "array", "required": False, "default": [], "maxItems": 3,
             "items": {
                 "type": "object",
                 "properties": {
-                    "path": {"type": "string", "description": "LoRA source: HF repo ID (owner/repo), CivitAI URL/ID, raw .safetensors URL, or local directory name"},
+                    "path": {"type": "string", "description": "LoRA source: HF repo ID, CivitAI URL/ID, raw URL, or local directory"},
                     "scale": {"type": "number", "default": 1.0, "minimum": 0.0, "maximum": 4.0, "description": "LoRA strength (0.0 = off, 1.0 = normal, 4.0 = max)"},
-                    "huggingface_api_key": {"type": "string", "description": "Optional. HuggingFace API key for private/gated HF repos. Falls back to server HF_TOKEN env var if omitted."},
-                    "civitai_api_key": {"type": "string", "description": "Optional. CivitAI API key for downloading LoRAs. Falls back to server CIVITAI_API_KEY env var if omitted."},
+                    "huggingface_api_key": {"type": "string", "description": "Optional HF API key for private/gated repos."},
+                    "civitai_api_key": {"type": "string", "description": "Optional CivitAI API key for downloads."},
                 },
                 "required": ["path"],
             },
-            "description": "Up to 3 LoRA adapters. Each has a path (source) and scale (strength). Omit or set to [] for base model.",
+            "description": "Up to 3 LoRA adapters. Omit or set to [] for base model.",
         },
     }
 
-    _current_loras: list[dict] = []  # [{path, scale}, ...]
+    _current_loras: list[dict] = []
 
     def load(self):
         if self._pipe is not None:
             return
         self._pipe = ZImagePipeline.from_pretrained(
-            self.pipeline_id,
-            torch_dtype=self.torch_dtype,
-            **self.pipeline_kwargs,
+            self.pipeline_id, torch_dtype=self.torch_dtype, **self.pipeline_kwargs
         ).to("cuda")
         self._current_loras = []
         print(f"Z-Image-Turbo loaded on {torch.cuda.get_device_name(0)}")
 
     def _apply_loras(self, loras: list[dict]) -> None:
-        """Ensure the pipeline has exactly the specified LoRAs loaded + fused."""
         if len(loras) > MAX_LORAS:
             raise ValueError(f"Maximum {MAX_LORAS} LoRAs per request, got {len(loras)}")
-
-        # Check if the set is identical (no-op)
         current_keys = frozenset((l["path"], l.get("scale", 1.0)) for l in self._current_loras)
         new_keys = frozenset((l["path"], l.get("scale", 1.0)) for l in loras)
         if current_keys == new_keys:
             return
-
-        # Unload everything
         if self._current_loras:
             self._pipe.unfuse_lora()
             self._pipe.unload_lora_weights()
             self._current_loras = []
             print("  LoRAs unloaded")
-
         if not loras:
-            return  # base model only
-
-        # Load each LoRA with a unique adapter_name.
-        names = []
-        weights = []
+            return
+        names, weights = [], []
         saved_hf_token = os.environ.get("HF_TOKEN", "")
         for i, l in enumerate(loras):
             path = l["path"]
             scale = l.get("scale", 1.0)
-            hf_key = l.get("huggingface_api_key", None)
-            civitai_key = l.get("civitai_api_key", None)
+            hf_key = l.get("huggingface_api_key")
+            civitai_key = l.get("civitai_api_key")
             name = f"lora_{i}"
-
-            # Set/reset HF_TOKEN per-LoRA to prevent token leakage
             if hf_key and "/" in path and "civitai" not in path:
                 os.environ["HF_TOKEN"] = hf_key
-            else:
-                if saved_hf_token:
-                    os.environ["HF_TOKEN"] = saved_hf_token
-                elif "HF_TOKEN" in os.environ:
-                    del os.environ["HF_TOKEN"]
-
+            elif saved_hf_token:
+                os.environ["HF_TOKEN"] = saved_hf_token
+            elif "HF_TOKEN" in os.environ:
+                del os.environ["HF_TOKEN"]
             source = resolve_lora_source(path, civitai_api_key=civitai_key)
             self._pipe.load_lora_weights(source, adapter_name=name)
             names.append(name)
             weights.append(scale)
             print(f"  LoRA [{name}] {path} loaded (scale={scale})")
-
-        # Restore original HF_TOKEN
         if saved_hf_token:
             os.environ["HF_TOKEN"] = saved_hf_token
         elif "HF_TOKEN" in os.environ and not saved_hf_token:
             del os.environ["HF_TOKEN"]
-
         self._pipe.set_adapters(names, adapter_weights=weights)
         self._pipe.fuse_lora(adapter_names=names)
         self._current_loras = [{"path": l["path"], "scale": l.get("scale", 1.0)} for l in loras]
         print(f"  LoRAs fused: {dict(zip(names, weights))}")
 
     def get_output_metadata(self, params: dict, filepath: str) -> dict:
-        """Return image-specific metadata for the orchestrator."""
-        return {
-            "type": self.type,
-            "seed": params.get("seed", -1),
-            "width": params.get("width", 1024),
-            "height": params.get("height", 1024),
-        }
+        return {"type": self.type, "seed": params.get("seed", -1), "width": params.get("width", 1024), "height": params.get("height", 1024)}
 
     def generate(self, params: dict) -> Path:
         prompt = params.get("prompt", "")
@@ -134,7 +111,6 @@ class ZImageAdapter(MediaAdapter):
         height = params.get("height", 1024)
         seed = params.get("seed", -1)
         loras = params.get("loras", [])
-
         if not prompt:
             raise ValueError("prompt is required")
         if num_inference_steps < 1 or num_inference_steps > 50:
@@ -143,22 +119,15 @@ class ZImageAdapter(MediaAdapter):
             raise ValueError(f"dimensions must be 64-2048, got {width}x{height}")
         if not isinstance(loras, list):
             raise ValueError("loras must be an array of {path, scale} objects")
-
         self._apply_loras(loras)
-
         if seed < 0:
             seed = torch.randint(0, 2**31 - 1, (1,)).item()
         generator = torch.Generator("cuda").manual_seed(seed)
-
         image = self._pipe(
-            prompt=prompt,
-            num_inference_steps=num_inference_steps,
-            guidance_scale=guidance_scale,
-            width=width,
-            height=height,
+            prompt=prompt, num_inference_steps=num_inference_steps,
+            guidance_scale=guidance_scale, width=width, height=height,
             generator=generator,
         ).images[0]
-
         filename = f"{uuid.uuid4()}.png"
         filepath = Path("/app/output") / filename
         filepath.parent.mkdir(parents=True, exist_ok=True)

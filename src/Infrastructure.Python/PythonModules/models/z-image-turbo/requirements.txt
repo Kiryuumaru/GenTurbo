@@ -1,0 +1,8 @@
+torch>=2.4
+diffusers>=0.31
+transformers
+accelerate
+pillow
+huggingface_hub
+peft
+certifi

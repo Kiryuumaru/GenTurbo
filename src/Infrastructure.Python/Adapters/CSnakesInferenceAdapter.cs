@@ -17,8 +17,8 @@ internal sealed class CSnakesInferenceAdapter : IPythonInferenceProvider, IDispo
 
         using (GIL.Acquire())
         {
-            _logger.LogInformation("Importing Python module csnakes_bridge");
-            _module = Import.ImportModule("csnakes_bridge");
+            _logger.LogInformation("Importing Python bridge module: bridge");
+            _module = Import.ImportModule("bridge");
         }
     }
 
