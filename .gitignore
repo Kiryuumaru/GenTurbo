@@ -53,3 +53,4 @@ __pycache__/
 # Agent prompts and memory
 /.prompts/
 /.memory/
+/investigate
