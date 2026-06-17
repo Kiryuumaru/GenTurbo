@@ -7,7 +7,7 @@ using Domain.Workers.ValueObjects;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
-namespace Presentation.Api.Endpoints;
+namespace Presentation.Server.Endpoints;
 
 internal static class WorkerEndpoints
 {

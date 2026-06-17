@@ -6,8 +6,8 @@ Distributed multi-model media generation platform — orchestrator job queue wit
 
 | Project | Role |
 |---------|------|
-| `src/Presentation.Api` | **Orchestrator** — REST API, job queue, worker registry, file serving (port 7860) |
-| `src/Presentation.Cli` | **Worker CLI** — GPU inference node, polls orchestrator, uploads results |
+| `src/Presentation.Server` | **Orchestrator** — REST API, job queue, worker registry, file serving (port 7860) |
+| `src/Presentation.Worker` | **Worker** — GPU inference node, polls orchestrator, uploads results |
 | `src/Domain` | Domain entities, value objects, repository/UoW interfaces |
 | `src/Application` | Service layer, inbound/outbound ports, background workers |
 | `src/Infrastructure.Sqlite` | SQLite persistence (jobs, workers, models) |
@@ -65,7 +65,7 @@ Documentation at `/` (Scalar UI) and `/openapi.json`. Key endpoints:
 ### Orchestrator
 
 ```bash
-dotnet run --project src/Presentation.Api
+dotnet run --project src/Presentation.Server
 ```
 
 Listens on `http://0.0.0.0:7860`.
@@ -73,7 +73,7 @@ Listens on `http://0.0.0.0:7860`.
 ### Worker
 
 ```bash
-dotnet run --project src/Presentation.Cli worker \
+dotnet run --project src/Presentation.Worker \
   --orchestrator-url http://orchestrator-host:7860 \
   --worker-id gpu-01 \
   --worker-name "DGX GPU Node" \

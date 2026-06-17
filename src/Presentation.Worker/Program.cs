@@ -1,7 +1,7 @@
 using Infrastructure.Sqlite;
 using Infrastructure.Python;
 using Infrastructure.FileSystem;
-using Presentation.Cli.Commands;
+using Presentation.Worker.Commands;
 
 return await ApplicationBuilderHelpers.ApplicationBuilder.Create()
     .AddApplication<Domain.Domain>()

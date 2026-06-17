@@ -7,9 +7,10 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<AssemblyTitle>GenTurbo CLI</AssemblyTitle>
-		<AssemblyName>genturbo</AssemblyName>
-		<Description>CLI application for GenTurbo distributed media generation platform.</Description>
+		<AssemblyTitle>GenTurbo Worker</AssemblyTitle>
+		<AssemblyName>genturbo-worker</AssemblyName>
+		<RootNamespace>Presentation.Worker</RootNamespace>
+		<Description>GenTurbo GPU worker node — polls orchestrator, runs inference, uploads results.</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
-namespace Presentation.Api.Endpoints;
+namespace Presentation.Server.Endpoints;
 
 internal static class ClientEndpoints
 {

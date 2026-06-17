@@ -5,6 +5,11 @@
 		<EnableNsDepCop>false</EnableNsDepCop>
 	</PropertyGroup>
 
+	<PropertyGroup>
+		<AssemblyName>genturbo-server</AssemblyName>
+		<RootNamespace>Presentation.Server</RootNamespace>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
 	</ItemGroup>

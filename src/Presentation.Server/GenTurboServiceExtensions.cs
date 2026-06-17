@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Presentation.Api;
+namespace Presentation.Server;
 
 internal static class GenTurboServiceExtensions
 {

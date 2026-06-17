@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
 using System.Text.Json;
 
-namespace Presentation.Cli.Commands;
+namespace Presentation.Worker.Commands;
 
 [Command("Run the GenTurbo worker — polls orchestrator, runs inference, uploads results.")]
 internal class WorkerCommand : Build.BaseCommand<HostApplicationBuilder>

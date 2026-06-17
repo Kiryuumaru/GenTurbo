@@ -13,7 +13,7 @@
 		<InternalsVisibleTo Include="Infrastructure.Sqlite" />
 		<InternalsVisibleTo Include="Infrastructure.Python" />
 		<InternalsVisibleTo Include="Infrastructure.FileSystem" />
-		<InternalsVisibleTo Include="Presentation.Api" />
+		<InternalsVisibleTo Include="genturbo-server" />
 	</ItemGroup>
 
 </Project>

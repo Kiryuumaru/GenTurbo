@@ -1,5 +1,5 @@
-using Presentation.Api;
-using Presentation.Api.Endpoints;
+using Presentation.Server;
+using Presentation.Server.Endpoints;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

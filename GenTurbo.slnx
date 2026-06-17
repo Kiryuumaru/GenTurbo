@@ -6,6 +6,6 @@
   <Project Path="src/Infrastructure.Python/Infrastructure.Python.csproj" />
   <Project Path="src/Infrastructure.FileSystem/Infrastructure.FileSystem.csproj" />
   <Project Path="src/Presentation/Presentation.csproj" />
-  <Project Path="src/Presentation.Cli/Presentation.Cli.csproj" />
-  <Project Path="src/Presentation.Api/Presentation.Api.csproj" />
+  <Project Path="src/Presentation.Worker/Presentation.Worker.csproj" />
+  <Project Path="src/Presentation.Server/Presentation.Server.csproj" />
 </Solution>
