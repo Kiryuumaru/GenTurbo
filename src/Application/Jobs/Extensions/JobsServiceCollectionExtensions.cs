@@ -14,7 +14,6 @@ internal static class JobsServiceCollectionExtensions
         services.AddScoped<IJobService>(sp => sp.GetRequiredService<JobService>());
         services.AddScoped<IJobOrchestrator>(sp => sp.GetRequiredService<JobService>());
         services.AddHostedService<TtlSweepWorker>();
-
         return services;
     }
 }

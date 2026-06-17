@@ -4,13 +4,13 @@ namespace Domain.Shared.Models;
 
 public abstract class Entity : IEntity
 {
-    public Guid Id { get; protected set; }
+    public Guid Id { get; private set; }
+    public Guid RevId { get; private set; } = Guid.NewGuid();
 
-    public Guid RevId { get; protected set; }
+    protected void UpdateRevision() => RevId = Guid.NewGuid();
 
     protected Entity(Guid id)
     {
         Id = id;
-        RevId = Guid.NewGuid();
     }
 }

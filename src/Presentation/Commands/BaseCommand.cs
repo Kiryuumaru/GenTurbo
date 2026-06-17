@@ -1,5 +1,6 @@
 using Application.Shared.Interfaces.Inbound;
 using Application.Logger.Extensions;
+using Application.EmbeddedConfig.Extensions;
 using ApplicationBuilderHelpers;
 using ApplicationBuilderHelpers.Attributes;
 using Microsoft.Extensions.Configuration;
@@ -25,11 +26,14 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(DynamicallyAccesse
     {
         base.AddConfigurations(applicationBuilder, configuration);
 
+        configuration.LoadEncryptedEmbeddedConfig(ApplicationConstants);
         configuration.LoggerLevel = LogLevel;
     }
 
     public override void AddServices(ApplicationHostBuilder applicationBuilder, IServiceCollection services)
     {
+        services.AddSingleton(ApplicationConstants);
+
         services.Configure<ConsoleLifetimeOptions>(opts => opts.SuppressStatusMessages = true);
 
         services.AddLogging(builder =>
@@ -47,9 +51,23 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(DynamicallyAccesse
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<BaseCommand<THostApplicationBuilder>>>();
 
         Console.WriteLine();
-        Console.WriteLine("  GenTurbo — Distributed Multi-Model Media Generation Platform");
+        Console.WriteLine(BuildAppBanner());
         Console.WriteLine();
 
-        logger.LogInformation("GenTurbo orchestrator starting");
+        logger.LogInformation("Application started: {AppName} v{Version}", ApplicationConstants.AppName, ApplicationConstants.Version);
+    }
+
+    private string BuildAppBanner()
+    {
+        return $@"""
+  _____            ______
+ / ____|          |__  __|
+| |  __  ___ _ __   | |_   _ _ __ ___  _ __
+| | |_ |/ _ \ '_ \  | | | | | '__/ _ \| '__|
+| |__| |  __/ | | | | | |_| | | | (_) | |
+ \_____|\___|_| |_| |_|\__,_|_|  \___/|_|
+
+  {ApplicationConstants.AppTitle} v{ApplicationConstants.Version}
+""";
     }
 }

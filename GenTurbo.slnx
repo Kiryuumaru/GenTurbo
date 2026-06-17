@@ -11,4 +11,6 @@
   <Project Path="src/Presentation/Presentation.csproj" />
   <Project Path="src/Presentation.Worker/Presentation.Worker.csproj" />
   <Project Path="src/Presentation.Server/Presentation.Server.csproj" />
+  <Project Path="tests/Domain.UnitTests/Domain.UnitTests.csproj" />
+  <Project Path="tests/Application.UnitTests/Application.UnitTests.csproj" />
 </Solution>

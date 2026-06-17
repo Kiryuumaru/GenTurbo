@@ -1,3 +1,5 @@
+using Application.AppEnvironment.Extensions;
+using Application.EmbeddedConfig.Extensions;
 using Application.Jobs.Extensions;
 using Application.Shared.Extensions;
 using Application.Workers.Extensions;
@@ -12,6 +14,8 @@ public class Application : ApplicationDependency
     {
         base.AddServices(applicationBuilder, services);
 
+        services.AddAppEnvironmentServices();
+        services.AddEmbeddedConfigServices();
         services.AddSharedServices();
         services.AddJobsServices();
         services.AddWorkersServices();

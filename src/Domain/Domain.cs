@@ -1,3 +1,4 @@
+using Domain.AppEnvironment.Extensions;
 using Domain.Jobs.Extensions;
 using Domain.Shared.Extensions;
 using Domain.Workers.Extensions;
@@ -12,6 +13,7 @@ public class Domain : ApplicationDependency
     {
         base.AddServices(applicationBuilder, services);
 
+        services.AddAppEnvironmentServices();
         services.AddSharedServices();
         services.AddJobsServices();
         services.AddWorkersServices();

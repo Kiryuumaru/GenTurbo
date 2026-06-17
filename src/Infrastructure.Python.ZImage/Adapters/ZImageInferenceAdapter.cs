@@ -1,4 +1,5 @@
 using Application.Jobs.Interfaces.Outbound;
+using Application.Jobs.Models;
 using CSnakes.Runtime;
 using CSnakes.Runtime.Python;
 using Infrastructure.Python.Adapters;
