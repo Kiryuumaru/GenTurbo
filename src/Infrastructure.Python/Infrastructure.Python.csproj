@@ -1,13 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+	<PropertyGroup>
+		<IsTrimmable>false</IsTrimmable>
+		<EnableTrimAnalyzer>false</EnableTrimAnalyzer>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<PackageReference Include="CSnakes.Runtime" Version="1.2.1" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<AdditionalFiles Include="PythonModules\csnakes_bridge.py">
+		<None Include="PythonModules\**\*.py">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</AdditionalFiles>
+			<LinkBase>PythonModules\</LinkBase>
+		</None>
 	</ItemGroup>
 
 	<ItemGroup>

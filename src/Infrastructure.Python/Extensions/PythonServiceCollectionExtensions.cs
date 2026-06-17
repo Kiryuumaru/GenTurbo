@@ -29,7 +29,7 @@ internal static class PythonServiceCollectionExtensions
         services.WithPython()
             .FromFolder(modulesPath, "3.12");
 
-        services.AddScoped<IPythonInferenceProvider, CSnakesInferenceAdapter>();
+        services.AddSingleton<IPythonInferenceProvider, CSnakesInferenceAdapter>();
         return services;
     }
 }
