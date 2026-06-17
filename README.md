@@ -36,7 +36,7 @@ call into Python for GPU inference via CSnakes, and upload results.
 |-------|------|------|
 | `z-image-turbo` (Tongyi-MAI/Z-Image-Turbo, 6B) | 14 GB | image |
 
-Add new adapters in `src/Infrastructure.Python/PythonModules/app/worker/adapters/`.
+Add a new model by copying `src/Infrastructure.Python/PythonModules/models/z-image-turbo/` to a new directory.
 
 ## API
 
@@ -84,7 +84,7 @@ dotnet run --project src/Presentation.Worker \
 The worker:
 1. Registers with the orchestrator (idempotent)
 2. Polls every 5s for jobs
-3. Runs inference via CSnakes → Python (app/worker/adapters/)
+3. Runs inference via CSnakes → Python (models/<id>/bridge.py)
 4. Uploads result files via multipart
 5. Heartbeats every 30s
 
@@ -115,17 +115,25 @@ dotnet build
 
 ## Inference Engine (Python)
 
-The GPU inference code lives in `src/Infrastructure.Python/PythonModules/`. C# calls into it via CSnakes.
+GPU inference in `src/Infrastructure.Python/PythonModules/models/`. Each model has its own
+virtualenv with `requirements.txt`. C# calls into it via CSnakes C-API.
 
 ```
-PythonModules/
-├── csnakes_bridge.py        # Module-level functions called by C#
-└── app/worker/
-    ├── lora.py              # LoRA resolution (HF, CivitAI, URL, local cache)
-    └── adapters/
-        ├── base.py          # MediaAdapter base class + auto-registry
-        └── image/
-            └── z_image.py   # Z-Image-Turbo GPU inference pipeline
+PythonModules/models/
+├── shared/
+│   ├── base.py          # MediaAdapter base class + auto-registry
+│   └── lora.py          # LoRA resolution (HF, CivitAI, URL, local cache)
+└── z-image-turbo/
+    ├── requirements.txt # pip dependencies (torch, diffusers, etc.)
+    ├── bridge.py        # CSnakes bridge — entry point for C#
+    └── model.py         # Z-Image-Turbo GPU inference pipeline
+```
+
+### Adding a new model
+
+```bash
+cp -r PythonModules/models/z-image-turbo PythonModules/models/<new-model>
+# edit model.py (new model_id, pipeline), bridge.py, requirements.txt
 ```
 
 ### Status lifecycle
